@@ -160,6 +160,13 @@ const seed = db.transaction(() => {
   }
 });
 
-seed();
+const existing = db
+  .prepare("SELECT COUNT(*) AS count FROM challenges")
+  .get();
 
-console.log("✅ CTF challenges added!");
+if (existing.count === 0) {
+  seed();
+  console.log("✅ CTF challenges added!");
+} else {
+  console.log("ℹ️ CTF challenges already exist.");
+}
