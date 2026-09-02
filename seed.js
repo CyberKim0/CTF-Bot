@@ -1,7 +1,6 @@
 const { db } = require("./database");
 
 const challenges = [
-  // 🟢 BEGINNER
   {
     name: "Base64 Basics",
     category: "crypto",
@@ -20,8 +19,6 @@ const challenges = [
     points: 100,
     xp: 100
   },
-
-  // 🔵 INTERMEDIATE
   {
     name: "Simple Cipher",
     category: "crypto",
@@ -40,8 +37,6 @@ const challenges = [
     points: 250,
     xp: 250
   },
-
-  // 🟠 ADVANCED
   {
     name: "SQL Mystery",
     category: "web",
@@ -60,8 +55,6 @@ const challenges = [
     points: 500,
     xp: 500
   },
-
-  // 🔴 EXPERT
   {
     name: "Reverse Challenge",
     category: "reverse",
@@ -75,4 +68,33 @@ const challenges = [
     name: "Final Fortress",
     category: "forensics",
     difficulty: "expert",
-    description: "Solve the
+    description: "Solve the multi-stage forensic investigation and recover the final flag.",
+    flag: "CTF{final_fortress}",
+    points: 1000,
+    xp: 1000
+  }
+];
+
+const insert = db.prepare(`
+  INSERT INTO challenges
+  (name, category, difficulty, description, flag, points, xp)
+  VALUES (?, ?, ?, ?, ?, ?, ?)
+`);
+
+const seed = db.transaction(() => {
+  for (const challenge of challenges) {
+    insert.run(
+      challenge.name,
+      challenge.category,
+      challenge.difficulty,
+      challenge.description,
+      challenge.flag,
+      challenge.points,
+      challenge.xp
+    );
+  }
+});
+
+seed();
+
+console.log("✅ CTF challenges added!");
