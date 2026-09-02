@@ -1,6 +1,10 @@
 const Database = require("better-sqlite3");
+const path = require("path");
 
-const db = new Database("ctf.db");
+const dbPath = path.join(__dirname, "ctf.db");
+const db = new Database(dbPath);
+
+console.log("📁 Database:", dbPath);
 
 // Players
 db.prepare(`
