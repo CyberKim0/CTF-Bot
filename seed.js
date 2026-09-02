@@ -1,9 +1,5 @@
 const { db } = require("./database");
 
-// Clear old challenges before reseeding
-db.prepare("DELETE FROM completed").run();
-db.prepare("DELETE FROM challenges").run();
-
 const challenges = [
   // 🟢 BEGINNER
   {
@@ -81,7 +77,7 @@ const challenges = [
     xp: 250
   },
 
-  // 🟣 ADVANCED
+  // 🟠 ADVANCED
   {
     name: "SQL Mystery",
     category: "web",
@@ -103,70 +99,4 @@ const challenges = [
   {
     name: "Binary Investigation",
     category: "reverse",
-    difficulty: "advanced",
-    description: "Analyze the provided training binary and determine the correct input.",
-    flag: "CTF{binary_solved}",
-    points: 500,
-    xp: 500
-  },
-
-  // 🔴 EXPERT
-  {
-    name: "Reverse Challenge",
-    category: "reverse",
-    difficulty: "expert",
-    description: "Analyze the provided program and determine the correct input.",
-    flag: "CTF{reverse_master}",
-    points: 1000,
-    xp: 1000
-  },
-  {
-    name: "Final Fortress",
-    category: "forensics",
-    difficulty: "expert",
-    description: "Solve the multi-stage forensic investigation and recover the final flag.",
-    flag: "CTF{final_fortress}",
-    points: 1000,
-    xp: 1000
-  },
-  {
-    name: "Network Phantom",
-    category: "networking",
-    difficulty: "expert",
-    description: "Investigate the advanced network evidence and recover the hidden flag.",
-    flag: "CTF{network_phantom}",
-    points: 1000,
-    xp: 1000
-  }
-];
-
-const insert = db.prepare(`
-  INSERT INTO challenges
-  (name, category, difficulty, description, flag, points, xp)
-  VALUES (?, ?, ?, ?, ?, ?, ?)
-`);
-
-const seed = db.transaction(() => {
-  for (const challenge of challenges) {
-    insert.run(
-      challenge.name,
-      challenge.category,
-      challenge.difficulty,
-      challenge.description,
-      challenge.flag,
-      challenge.points,
-      challenge.xp
-    );
-  }
-});
-
-const existing = db
-  .prepare("SELECT COUNT(*) AS count FROM challenges")
-  .get();
-
-if (existing.count === 0) {
-  seed();
-  console.log("✅ CTF challenges added!");
-} else {
-  console.log("ℹ️ CTF challenges already exist.");
-}
+    difficulty
