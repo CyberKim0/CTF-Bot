@@ -1,23 +1,52 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const { db, getPlayer } = require("../database");
+const {
+  SlashCommandBuilder,
+  EmbedBuilder
+} = require("discord.js");
+
+const {
+  db,
+  syncProgress
+} = require("../database");
 
 const ranks = [
-  { name: "beginner", display: "CTF Beginner", xp: 0, emoji: "🟢" },
-  { name: "intermediate", display: "CTF Intermediate", xp: 500, emoji: "🔵" },
-  { name: "advanced", display: "CTF Advanced", xp: 1500, emoji: "🟠" },
-  { name: "expert", display: "CTF Expert", xp: 3000, emoji: "🔴" }
+  {
+    name: "beginner",
+    display: "CTF Beginner",
+    xp: 0,
+    emoji: "🟢"
+  },
+  {
+    name: "intermediate",
+    display: "CTF Intermediate",
+    xp: 500,
+    emoji: "🔵"
+  },
+  {
+    name: "advanced",
+    display: "CTF Advanced",
+    xp: 1500,
+    emoji: "🟠"
+  },
+  {
+    name: "expert",
+    display: "CTF Expert",
+    xp: 3000,
+    emoji: "🔴"
+  }
 ];
 
 module.exports = {
+
   data: new SlashCommandBuilder()
     .setName("challenge")
     .setDescription("Get a random CTF challenge"),
 
   async execute(interaction) {
 
-    const player = getPlayer(interaction.user.id);
+    // Always repair/sync XP first
+    const player = syncProgress(interaction.user.id);
 
-    // Find player's current rank
+    // Find current rank
     let currentRank = ranks[0];
 
     for (const rank of ranks) {
@@ -26,58 +55,75 @@ module.exports = {
       }
     }
 
-    // Get a RANDOM uncompleted challenge
+    // Random uncompleted challenge
     const challenge = db.prepare(`
       SELECT c.*
       FROM challenges c
+
       WHERE c.difficulty = ?
+
       AND NOT EXISTS (
         SELECT 1
         FROM completed x
         WHERE x.user_id = ?
         AND x.challenge_id = c.id
       )
+
       ORDER BY RANDOM()
+
       LIMIT 1
     `).get(
       currentRank.name,
       interaction.user.id
     );
 
-    // All challenges in current rank completed
+    // ===============================
+    // NO MORE CHALLENGES
+    // ===============================
+
     if (!challenge) {
 
-      const currentIndex = ranks.findIndex(
-        r => r.name === currentRank.name
+      const index = ranks.findIndex(
+        rank => rank.name === currentRank.name
       );
 
-      const nextRank = ranks[currentIndex + 1];
+      const nextRank = ranks[index + 1];
 
+      // Maximum rank
       if (!nextRank) {
+
         return interaction.reply({
           content:
-            "👑 **You've completed ALL CTF challenges!**\n\n" +
+            `👑 **You've completed ALL CTF challenges!**\n\n` +
             `⭐ XP: **${player.xp}**\n` +
             `🏆 Points: **${player.points}**`,
           ephemeral: true
         });
       }
 
-      const needed = nextRank.xp - player.xp;
+      const needed = Math.max(
+        0,
+        nextRank.xp - player.xp
+      );
 
       return interaction.reply({
         content:
           `🎉 **You've completed all ${currentRank.name} challenges currently available!**\n\n` +
-          `${nextRank.emoji} **${nextRank.display}** is locked.\n\n` +
+          `${nextRank.emoji} **${nextRank.display} is locked.**\n\n` +
           `⭐ Your XP: **${player.xp}**\n` +
           `📈 XP needed: **${needed} more**`,
         ephemeral: true
       });
     }
 
+    // ===============================
+    // SEND CHALLENGE
+    // ===============================
+
     const embed = new EmbedBuilder()
       .setTitle(`🏁 ${challenge.name}`)
       .setDescription(challenge.description)
+
       .addFields(
         {
           name: "📂 Category",
@@ -95,8 +141,10 @@ module.exports = {
           inline: true
         }
       )
+
       .setFooter({
-        text: `Challenge #${challenge.id} • Use /submit to submit your flag`
+        text:
+          `Challenge #${challenge.id} • Use /submit to submit your flag`
       });
 
     await interaction.reply({
