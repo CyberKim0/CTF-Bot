@@ -2,30 +2,10 @@ const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { db, getPlayer } = require("../database");
 
 const ranks = [
-  {
-    name: "CTF Beginner",
-    difficulty: "beginner",
-    xp: 0,
-    emoji: "🟢",
-  },
-  {
-    name: "CTF Intermediate",
-    difficulty: "intermediate",
-    xp: 500,
-    emoji: "🔵",
-  },
-  {
-    name: "CTF Advanced",
-    difficulty: "advanced",
-    xp: 1500,
-    emoji: "🟠",
-  },
-  {
-    name: "CTF Expert",
-    difficulty: "expert",
-    xp: 3000,
-    emoji: "🔴",
-  },
+  { name: "beginner", display: "CTF Beginner", xp: 0, emoji: "🟢" },
+  { name: "intermediate", display: "CTF Intermediate", xp: 500, emoji: "🔵" },
+  { name: "advanced", display: "CTF Advanced", xp: 1500, emoji: "🟠" },
+  { name: "expert", display: "CTF Expert", xp: 3000, emoji: "🔴" }
 ];
 
 module.exports = {
@@ -34,6 +14,7 @@ module.exports = {
     .setDescription("Get a random CTF challenge"),
 
   async execute(interaction) {
+
     const player = getPlayer(interaction.user.id);
 
     // Find player's current rank
@@ -45,57 +26,52 @@ module.exports = {
       }
     }
 
-    // Get a random challenge from the current rank
-    // that the player has NOT completed yet
-    const challenge = db
-      .prepare(`
-        SELECT c.*
-        FROM challenges c
-        WHERE c.difficulty = ?
-        AND NOT EXISTS (
-          SELECT 1
-          FROM completed cp
-          WHERE cp.user_id = ?
-          AND cp.challenge_id = c.id
-        )
-        ORDER BY RANDOM()
-        LIMIT 1
-      `)
-      .get(currentRank.difficulty, interaction.user.id);
+    // Get a RANDOM uncompleted challenge
+    const challenge = db.prepare(`
+      SELECT c.*
+      FROM challenges c
+      WHERE c.difficulty = ?
+      AND NOT EXISTS (
+        SELECT 1
+        FROM completed x
+        WHERE x.user_id = ?
+        AND x.challenge_id = c.id
+      )
+      ORDER BY RANDOM()
+      LIMIT 1
+    `).get(
+      currentRank.name,
+      interaction.user.id
+    );
 
-    // All challenges at this rank completed
+    // All challenges in current rank completed
     if (!challenge) {
-      const nextRank =
-        ranks[ranks.indexOf(currentRank) + 1];
+
+      const currentIndex = ranks.findIndex(
+        r => r.name === currentRank.name
+      );
+
+      const nextRank = ranks[currentIndex + 1];
 
       if (!nextRank) {
         return interaction.reply({
           content:
-            `👑 **You've completed every CTF challenge!**\n\n` +
+            "👑 **You've completed ALL CTF challenges!**\n\n" +
             `⭐ XP: **${player.xp}**\n` +
             `🏆 Points: **${player.points}**`,
-          ephemeral: true,
+          ephemeral: true
         });
       }
 
-      const xpNeeded = nextRank.xp - player.xp;
-
-      if (xpNeeded > 0) {
-        return interaction.reply({
-          content:
-            `🎉 You've completed all **${currentRank.difficulty}** challenges currently available!\n\n` +
-            `${nextRank.emoji} **${nextRank.name}** is locked.\n\n` +
-            `⭐ Your XP: **${player.xp}**\n` +
-            `📈 XP needed: **${xpNeeded} more**`,
-          ephemeral: true,
-        });
-      }
+      const needed = nextRank.xp - player.xp;
 
       return interaction.reply({
         content:
-          `🔓 **${nextRank.name} unlocked!**\n\n` +
-          `Use \`/challenge\` to begin.`,
-        ephemeral: true,
+          `🎉 **You've completed all ${currentRank.name} challenges currently available!**\n\n` +
+          `${nextRank.emoji} **${nextRank.display}** is locked.\n\n` +
+          `⭐ Your XP: **${player.xp}**\n` +
+          `📈 XP needed: **${needed} more**`,
+        ephemeral: true
       });
     }
 
@@ -106,26 +82,25 @@ module.exports = {
         {
           name: "📂 Category",
           value: challenge.category,
-          inline: true,
+          inline: true
         },
         {
           name: "🎯 Difficulty",
-          value:
-            `${currentRank.emoji} ${currentRank.name}`,
-          inline: true,
+          value: currentRank.display,
+          inline: true
         },
         {
           name: "⭐ Points",
           value: `${challenge.points}`,
-          inline: true,
+          inline: true
         }
       )
       .setFooter({
-        text: `Challenge #${challenge.id} • Use /submit to submit your flag`,
+        text: `Challenge #${challenge.id} • Use /submit to submit your flag`
       });
 
     await interaction.reply({
-      embeds: [embed],
+      embeds: [embed]
     });
-  },
+  }
 };
