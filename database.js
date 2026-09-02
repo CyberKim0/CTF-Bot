@@ -6,7 +6,10 @@ const db = new Database(dbPath);
 
 console.log("📁 Database:", dbPath);
 
-// Players
+// ===============================
+// PLAYERS
+// ===============================
+
 db.prepare(`
   CREATE TABLE IF NOT EXISTS players (
     user_id TEXT PRIMARY KEY,
@@ -16,7 +19,10 @@ db.prepare(`
   )
 `).run();
 
-// Challenges
+// ===============================
+// CHALLENGES
+// ===============================
+
 db.prepare(`
   CREATE TABLE IF NOT EXISTS challenges (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,7 +36,10 @@ db.prepare(`
   )
 `).run();
 
-// Completed challenges
+// ===============================
+// COMPLETED
+// ===============================
+
 db.prepare(`
   CREATE TABLE IF NOT EXISTS completed (
     user_id TEXT NOT NULL,
@@ -39,38 +48,86 @@ db.prepare(`
   )
 `).run();
 
+// ===============================
+// GET PLAYER
+// ===============================
+
 function getPlayer(userId) {
   let player = db
-    .prepare("SELECT * FROM players WHERE user_id = ?")
+    .prepare(`
+      SELECT *
+      FROM players
+      WHERE user_id = ?
+    `)
     .get(userId);
 
   if (!player) {
     db.prepare(`
-      INSERT INTO players (user_id, xp, points, challenges_completed)
+      INSERT INTO players
+      (user_id, xp, points, challenges_completed)
       VALUES (?, 0, 0, 0)
     `).run(userId);
 
     player = db
-      .prepare("SELECT * FROM players WHERE user_id = ?")
+      .prepare(`
+        SELECT *
+        FROM players
+        WHERE user_id = ?
+      `)
       .get(userId);
   }
 
   return player;
 }
 
-function addProgress(userId, points, xp) {
+// ===============================
+// SYNC PLAYER PROGRESS
+// ===============================
+
+function syncProgress(userId) {
+  getPlayer(userId);
+
+  const progress = db
+    .prepare(`
+      SELECT
+        COALESCE(SUM(c.xp), 0) AS xp,
+        COALESCE(SUM(c.points), 0) AS points,
+        COUNT(c.id) AS completed
+      FROM completed x
+      JOIN challenges c
+        ON c.id = x.challenge_id
+      WHERE x.user_id = ?
+    `)
+    .get(userId);
+
   db.prepare(`
     UPDATE players
     SET
-      points = points + ?,
-      xp = xp + ?,
-      challenges_completed = challenges_completed + 1
+      xp = ?,
+      points = ?,
+      challenges_completed = ?
     WHERE user_id = ?
-  `).run(points, xp, userId);
+  `).run(
+    progress.xp,
+    progress.points,
+    progress.completed,
+    userId
+  );
+
+  return getPlayer(userId);
+}
+
+// ===============================
+// ADD PROGRESS
+// ===============================
+
+function addProgress(userId) {
+  return syncProgress(userId);
 }
 
 module.exports = {
   db,
   getPlayer,
   addProgress,
+  syncProgress,
 };
