@@ -1,6 +1,53 @@
 const { SlashCommandBuilder } = require("discord.js");
 const { db, getPlayer, addProgress } = require("../database");
 
+const levels = [
+  { name: "CTF Beginner", xp: 0 },
+  { name: "CTF Intermediate", xp: 500 },
+  { name: "CTF Advanced", xp: 1500 },
+  { name: "CTF Expert", xp: 3000 },
+];
+
+async function updateRole(member, xp) {
+  let currentLevel = levels[0];
+
+  for (const level of levels) {
+    if (xp >= level.xp) {
+      currentLevel = level;
+    }
+  }
+
+  // Create the role if it doesn't exist
+  let newRole = member.guild.roles.cache.find(
+    role => role.name === currentLevel.name
+  );
+
+  if (!newRole) {
+    newRole = await member.guild.roles.create({
+      name: currentLevel.name,
+      reason: "CTF progression role",
+    });
+  }
+
+  // Remove old CTF progression roles
+  for (const level of levels) {
+    const oldRole = member.guild.roles.cache.find(
+      role => role.name === level.name
+    );
+
+    if (oldRole && oldRole.id !== newRole.id && member.roles.cache.has(oldRole.id)) {
+      await member.roles.remove(oldRole);
+    }
+  }
+
+  // Give the new role
+  if (!member.roles.cache.has(newRole.id)) {
+    await member.roles.add(newRole);
+  }
+
+  return currentLevel.name;
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("submit")
@@ -67,11 +114,18 @@ module.exports = {
       challenge.xp
     );
 
+    const player = getPlayer(interaction.user.id);
+
+    const level = await updateRole(
+      interaction.member,
+      player.xp
+    );
+
     await interaction.reply(
-      `🎉 **Correct!**\n\n` +
-      `🏆 +${challenge.points} points\n` +
-      `⭐ +${challenge.xp} XP\n\n` +
-      `Keep going!`
+      `🎉 **Correct flag!**\n\n` +
+      `🏆 **+${challenge.points} points**\n` +
+      `⭐ **+${challenge.xp} XP**\n` +
+      `🎖️ **Rank: ${level}**`
     );
   },
 };
