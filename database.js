@@ -46,8 +46,8 @@ function getPlayer(userId) {
 
   if (!player) {
     db.prepare(`
-      INSERT INTO players (user_id)
-      VALUES (?)
+      INSERT INTO players (user_id, xp, points, challenges_completed)
+      VALUES (?, 0, 0, 0)
     `).run(userId);
 
     player = db
@@ -61,9 +61,10 @@ function getPlayer(userId) {
 function addProgress(userId, points, xp) {
   db.prepare(`
     UPDATE players
-    SET points = points + ?,
-        xp = xp + ?,
-        challenges_completed = challenges_completed + 1
+    SET
+      points = points + ?,
+      xp = xp + ?,
+      challenges_completed = challenges_completed + 1
     WHERE user_id = ?
   `).run(points, xp, userId);
 }
