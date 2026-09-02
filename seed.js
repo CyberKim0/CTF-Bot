@@ -156,15 +156,13 @@ const seed = db.transaction(() => {
   }
 });
 
-// Only seed if the table is empty.
-// IMPORTANT: Do NOT delete existing challenges/completions.
-const existing = db
+const count = db
   .prepare("SELECT COUNT(*) AS count FROM challenges")
   .get();
 
-if (existing.count === 0) {
+if (count.count === 0) {
   seed();
   console.log("✅ CTF challenges added!");
 } else {
-  console.log(`ℹ️ ${existing.count} challenges already exist.`);
+  console.log(`ℹ️ ${count.count} challenges already exist.`);
 }
