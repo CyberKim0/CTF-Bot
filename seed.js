@@ -1,6 +1,11 @@
 const { db } = require("./database");
 
+// Clear old challenges before reseeding
+db.prepare("DELETE FROM completed").run();
+db.prepare("DELETE FROM challenges").run();
+
 const challenges = [
+  // 🟢 BEGINNER
   {
     name: "Base64 Basics",
     category: "crypto",
@@ -20,6 +25,35 @@ const challenges = [
     xp: 100
   },
   {
+    name: "Caesar Starter",
+    category: "crypto",
+    difficulty: "beginner",
+    description: "Decode this Caesar cipher: FGH",
+    flag: "DEF",
+    points: 100,
+    xp: 100
+  },
+  {
+    name: "Hex Beginner",
+    category: "crypto",
+    difficulty: "beginner",
+    description: "Decode this hexadecimal string: 435446",
+    flag: "CTF",
+    points: 100,
+    xp: 100
+  },
+  {
+    name: "File Finder",
+    category: "linux",
+    difficulty: "beginner",
+    description: "Which Linux command is commonly used to search for files?",
+    flag: "find",
+    points: 100,
+    xp: 100
+  },
+
+  // 🔵 INTERMEDIATE
+  {
     name: "Simple Cipher",
     category: "crypto",
     difficulty: "intermediate",
@@ -37,6 +71,17 @@ const challenges = [
     points: 250,
     xp: 250
   },
+  {
+    name: "Hash Hunt",
+    category: "crypto",
+    difficulty: "intermediate",
+    description: "Identify the hashing algorithm used in the challenge.",
+    flag: "CTF{hash_found}",
+    points: 250,
+    xp: 250
+  },
+
+  // 🟣 ADVANCED
   {
     name: "SQL Mystery",
     category: "web",
@@ -56,6 +101,17 @@ const challenges = [
     xp: 500
   },
   {
+    name: "Binary Investigation",
+    category: "reverse",
+    difficulty: "advanced",
+    description: "Analyze the provided training binary and determine the correct input.",
+    flag: "CTF{binary_solved}",
+    points: 500,
+    xp: 500
+  },
+
+  // 🔴 EXPERT
+  {
     name: "Reverse Challenge",
     category: "reverse",
     difficulty: "expert",
@@ -70,6 +126,15 @@ const challenges = [
     difficulty: "expert",
     description: "Solve the multi-stage forensic investigation and recover the final flag.",
     flag: "CTF{final_fortress}",
+    points: 1000,
+    xp: 1000
+  },
+  {
+    name: "Network Phantom",
+    category: "networking",
+    difficulty: "expert",
+    description: "Investigate the advanced network evidence and recover the hidden flag.",
+    flag: "CTF{network_phantom}",
     points: 1000,
     xp: 1000
   }
