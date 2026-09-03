@@ -1,30 +1,26 @@
 require("dotenv").config();
 
-client.once(Events.ClientReady, (readyClient) => {
-  console.log(`✅ CTF Bot online as ${readyClient.user.tag}`);
+const {
+  Client,
+  GatewayIntentBits,
+  Collection,
+  Events,
+  ActivityType,
+} = require("discord.js");
 
-  readyClient.user.setPresence({
-    activities: [
-      {
-        name: "CTF Challenges | /challenge",
-        type: ActivityType.Playing,
-      },
-    ],
-    status: "online",
-  });
+const fs = require("fs");
+const path = require("path");
 
-  console.log("🟢 Status set!");
-});
-
+// Create bot client
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
 
 client.commands = new Collection();
 
-// Load commands
-const fs = require("fs");
-const path = require("path");
+// ===============================
+// LOAD COMMANDS
+// ===============================
 
 const commandsPath = path.join(__dirname, "commands");
 
@@ -38,16 +34,36 @@ if (fs.existsSync(commandsPath)) {
 
     if ("data" in command && "execute" in command) {
       client.commands.set(command.data.name, command);
+
+      console.log(`✅ Loaded /${command.data.name}`);
     }
   }
 }
 
-// Bot ready
+// ===============================
+// BOT READY
+// ===============================
+
 client.once(Events.ClientReady, (readyClient) => {
   console.log(`✅ CTF Bot online as ${readyClient.user.tag}`);
+
+  readyClient.user.setPresence({
+    activities: [
+      {
+        name: "CTF Challenges | /challenge",
+        type: ActivityType.Playing,
+      },
+    ],
+    status: "online",
+  });
+
+  console.log("🟢 Status: CTF Challenges | /challenge");
 });
 
-// Handle slash commands
+// ===============================
+// SLASH COMMANDS
+// ===============================
+
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -58,7 +74,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   try {
     await command.execute(interaction);
   } catch (error) {
-    console.error(error);
+    console.error("❌ Command error:", error);
 
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({
@@ -73,5 +89,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
   }
 });
+
+// ===============================
+// LOGIN
+// ===============================
 
 client.login(process.env.DISCORD_TOKEN);
