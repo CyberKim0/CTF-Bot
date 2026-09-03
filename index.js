@@ -1,11 +1,20 @@
 require("dotenv").config();
 
-const {
-  Client,
-  GatewayIntentBits,
-  Collection,
-  Events,
-} = require("discord.js");
+client.once(Events.ClientReady, (readyClient) => {
+  console.log(`✅ CTF Bot online as ${readyClient.user.tag}`);
+
+  readyClient.user.setPresence({
+    activities: [
+      {
+        name: "CTF Challenges | /challenge",
+        type: ActivityType.Playing,
+      },
+    ],
+    status: "online",
+  });
+
+  console.log("🟢 Status set!");
+});
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
