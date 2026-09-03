@@ -4,7 +4,8 @@
   "description": "Discord CTF progression bot",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "deploy": "node deploy-commands.js"
   },
   "dependencies": {
     "better-sqlite3": "^12.4.1",
