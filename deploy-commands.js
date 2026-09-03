@@ -29,18 +29,21 @@ const rest = new REST({ version: "10" }).setToken(
 
 (async () => {
   try {
-    console.log("🔄 Registering CTF commands...");
+    console.log("🔄 Registering global CTF commands...");
 
     await rest.put(
-      Routes.applicationGuildCommands(
-        process.env.CLIENT_ID,
-        process.env.GUILD_ID
-      ),
+      Routes.applicationCommands(process.env.CLIENT_ID),
       { body: commands }
     );
 
-    console.log("✅ CTF commands registered!");
+    console.log("✅ Global CTF commands registered!");
+
+    console.log(
+      "📋 Commands:",
+      commands.map(command => `/${command.name}`).join(", ")
+    );
+
   } catch (error) {
-    console.error(error);
+    console.error("❌ Command registration failed:", error);
   }
 })();
