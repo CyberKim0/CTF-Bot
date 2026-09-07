@@ -65,38 +65,36 @@ client.once(Events.ClientReady, (readyClient) => {
 });
 
 // ===============================
-// AUTOMATIC WELCOME SYSTEM
+// AUTOMATIC WELCOME SYSTEM V2
 // ===============================
 
 client.on(Events.GuildMemberAdd, async (member) => {
-  console.log(`🟢 MEMBER JOINED: ${member.user.tag}`);
-
-  const channelId = process.env.WELCOME_CHANNEL_ID;
-
-  console.log(`📌 Welcome Channel ID: ${channelId}`);
-
-  if (!channelId) {
-    console.log("❌ WELCOME_CHANNEL_ID is missing!");
-    return;
-  }
-
-  const channel = member.guild.channels.cache.get(channelId);
-
-  if (!channel) {
-    console.log("❌ Welcome channel not found!");
-    return;
-  }
-
-  console.log(`✅ Welcome channel found: #${channel.name}`);
-
   try {
+    const channel = member.guild.channels.cache.get(
+      process.env.WELCOME_CHANNEL_ID
+    );
+
+    if (!channel) {
+      console.log("❌ Welcome channel not found.");
+      return;
+    }
+
     const memberNumber = member.guild.memberCount;
 
+    // ===============================
+    // WELCOME EMBED
+    // ===============================
+
     const welcomeEmbed = new EmbedBuilder()
-      .setTitle("🌐 WELCOME TO THE GLOBAL CYBERSECURITY COMMUNITY")
+      .setAuthor({
+        name: `${member.user.username} joined the community`,
+        iconURL: member.user.displayAvatarURL({ extension: "png" }),
+      })
+      .setTitle("🌐 WELCOME TO HACKERS HEAVEN")
       .setDescription(
         `👋 Welcome ${member}!\n\n` +
-        `You are the **${memberNumber}th member** to join our community. 🌍`
+        `You are our **${memberNumber}th member**. 🌍\n\n` +
+        `**Learn • Build • Defend • Compete**`
       )
       .addFields(
         {
@@ -129,19 +127,81 @@ client.on(Events.GuildMemberAdd, async (member) => {
             "🧠 **USE YOUR KNOWLEDGE RESPONSIBLY.**",
         }
       )
+      .setThumbnail(
+        member.user.displayAvatarURL({ extension: "png", size: 256 })
+      )
       .setFooter({
         text: "HACKERS HEAVEN • LEARN • BUILD • DEFEND • COMPETE",
       })
       .setTimestamp();
 
+    // ===============================
+    // BUTTONS
+    // ===============================
+
+    const buttons = [];
+
+    if (process.env.VERIFICATION_CHANNEL_ID) {
+      buttons.push(
+        new ButtonBuilder()
+          .setLabel("🛡️ Verify")
+          .setStyle(ButtonStyle.Link)
+          .setURL(
+            `https://discord.com/channels/${member.guild.id}/${process.env.VERIFICATION_CHANNEL_ID}`
+          )
+      );
+    }
+
+    if (process.env.ROLES_CHANNEL_ID) {
+      buttons.push(
+        new ButtonBuilder()
+          .setLabel("🎭 Roles")
+          .setStyle(ButtonStyle.Link)
+          .setURL(
+            `https://discord.com/channels/${member.guild.id}/${process.env.ROLES_CHANNEL_ID}`
+          )
+      );
+    }
+
+    if (process.env.LEARNING_CHANNEL_ID) {
+      buttons.push(
+        new ButtonBuilder()
+          .setLabel("📚 Learning Hub")
+          .setStyle(ButtonStyle.Link)
+          .setURL(
+            `https://discord.com/channels/${member.guild.id}/${process.env.LEARNING_CHANNEL_ID}`
+          )
+      );
+    }
+
+    if (process.env.CTF_CHANNEL_ID) {
+      buttons.push(
+        new ButtonBuilder()
+          .setLabel("🏆 CTF Arena")
+          .setStyle(ButtonStyle.Link)
+          .setURL(
+            `https://discord.com/channels/${member.guild.id}/${process.env.CTF_CHANNEL_ID}`
+          )
+      );
+    }
+
+    const components = [];
+
+    if (buttons.length > 0) {
+      components.push(
+        new ActionRowBuilder().addComponents(buttons)
+      );
+    }
+
     await channel.send({
-      content: `🔥 Welcome to the community, ${member}!`,
+      content: `🔥 **Welcome to the community, ${member}!**`,
       embeds: [welcomeEmbed],
+      components,
     });
 
-    console.log(`✅ WELCOME SENT TO ${member.user.tag}`);
+    console.log(`✅ Welcomed ${member.user.tag} — Member #${memberNumber}`);
   } catch (error) {
-    console.error("❌ WELCOME SEND ERROR:", error);
+    console.error("❌ Welcome system error:", error);
   }
 });
 
