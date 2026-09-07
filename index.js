@@ -131,12 +131,13 @@ client.on(Events.GuildMemberAdd, async (member) => {
         }
       )
       .setThumbnail(
-        member.user.displayAvatarURL({ extension: "png", size: 256 })
-      )
-      .setFooter({
-        text: "HACKERS HEAVEN • LEARN • BUILD • DEFEND • COMPETE",
-      })
-      .setTimestamp();
+  member.user.displayAvatarURL({ extension: "png", size: 256 })
+)
+.setImage(process.env.WELCOME_BANNER_URL)
+.setFooter({
+  text: "HACKERS HEAVEN • LEARN • BUILD • DEFEND • COMPETE",
+})
+.setTimestamp();
 
     // ===============================
     // BUTTONS
