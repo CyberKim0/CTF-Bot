@@ -69,16 +69,27 @@ client.once(Events.ClientReady, (readyClient) => {
 // ===============================
 
 client.on(Events.GuildMemberAdd, async (member) => {
+  console.log(`🟢 MEMBER JOINED: ${member.user.tag}`);
+
+  const channelId = process.env.WELCOME_CHANNEL_ID;
+
+  console.log(`📌 Welcome Channel ID: ${channelId}`);
+
+  if (!channelId) {
+    console.log("❌ WELCOME_CHANNEL_ID is missing!");
+    return;
+  }
+
+  const channel = member.guild.channels.cache.get(channelId);
+
+  if (!channel) {
+    console.log("❌ Welcome channel not found!");
+    return;
+  }
+
+  console.log(`✅ Welcome channel found: #${channel.name}`);
+
   try {
-    const channel = member.guild.channels.cache.get(
-      process.env.WELCOME_CHANNEL_ID
-    );
-
-    if (!channel) {
-      console.log("❌ Welcome channel not found.");
-      return;
-    }
-
     const memberNumber = member.guild.memberCount;
 
     const welcomeEmbed = new EmbedBuilder()
@@ -128,9 +139,9 @@ client.on(Events.GuildMemberAdd, async (member) => {
       embeds: [welcomeEmbed],
     });
 
-    console.log(`👋 Welcomed ${member.user.tag}`);
+    console.log(`✅ WELCOME SENT TO ${member.user.tag}`);
   } catch (error) {
-    console.error("❌ Welcome system error:", error);
+    console.error("❌ WELCOME SEND ERROR:", error);
   }
 });
 
