@@ -7,6 +7,9 @@ const {
   Events,
   ActivityType,
   EmbedBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
 } = require("discord.js");
 
 const fs = require("fs");
